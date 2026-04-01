@@ -92,3 +92,21 @@ void ds1307_set_sqw(ds1307_sqw_t mode)
     uint8_t val = (uint8_t)mode;
     i2c_master_transmit(DS1307_ADDR, &reg, &val, 1);
 }
+
+/* Zkratky dni tydne, index 1-7 (Ne, Po, Ut, St, Ct, Pa, So) */
+const char * const DS1307_DAY_STR[8] = {
+    "", "Ne", "Po", "Ut", "St", "Ct", "Pa", "So"
+};
+
+uint8_t ds1307_day_of_week(uint16_t year, uint8_t month, uint8_t date)
+{
+    /* Sakamotov algoritmus — vraci 0=Ne, 1=Po, ..., 6=So
+     * Prevedeme na DS1307 format: 1=Ne, 2=Po, ..., 7=So */
+    static const uint8_t t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
+    if (month < 3)
+        year--;
+    uint8_t dow = (uint8_t)((year + year/4u - year/100u + year/400u
+                             + t[month - 1u] + date) % 7u);
+    /* dow: 0=Ne -> DS1307: 1=Ne, takze +1, wraparound 7->7 */
+    return (dow == 0u) ? 1u : (uint8_t)(dow + 1u);
+}

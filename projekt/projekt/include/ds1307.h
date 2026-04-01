@@ -77,4 +77,17 @@ void ds1307_get_date(uint8_t *date, uint8_t *month, uint8_t *year, uint8_t *day)
  * --------------------------------------------------------------- */
 void ds1307_set_sqw(ds1307_sqw_t mode);
 
+/* ---------------------------------------------------------------
+ * Vypocitej den tydne ze data (Sakamotov algoritmus).
+ * year  - plny rok (napr. 2026, tedy 2000 + ds1307_time_t.year)
+ * month - 1-12
+ * date  - 1-31
+ * Navratova hodnota: 1=Ne, 2=Po, 3=Ut, 4=St, 5=Ct, 6=Pa, 7=So
+ * (shodny format s DS1307: day=1 = nedele)
+ * --------------------------------------------------------------- */
+uint8_t ds1307_day_of_week(uint16_t year, uint8_t month, uint8_t date);
+
+/* Zkratky dni tydne pro displej, index 1-7 (0 je nevyuzity) */
+extern const char * const DS1307_DAY_STR[8];
+
 #endif /* DS1307_H_ */
