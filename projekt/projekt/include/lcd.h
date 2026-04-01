@@ -31,6 +31,11 @@ void lcd_write_char(char c);
 void lcd_write_string(const char *str);
 void lcd_shift_display(uint8_t right);
 
+/* Nahraje vlastni znak do CGRAM (HD44780 ma 8 slotu, index 0-7).
+ * bitmap: pole 8 bajtu, kazdy bajt = 1 radek (pouzivaji se bity 4:0).
+ * Po zapisu automaticky vrati kurzor na DDRAM pozici 0,0. */
+void lcd_create_char(uint8_t index, const uint8_t *bitmap);
+
 /* display: 1=zapnut, 0=vypnut
  * cursor:  1=kurzor viditelny, 0=skryty
  * blink:   1=blikajici kurzor, 0=neblika */

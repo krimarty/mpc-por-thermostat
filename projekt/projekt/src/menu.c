@@ -23,14 +23,14 @@
 #define CGRAM_SNOW   1
 
 static const uint8_t char_flame[8] = {
-    0b00100,
-    0b01110,
-    0b01110,
+    0b00110,
+    0b01100,
+    0b11110,
+    0b00110,
+    0b01111,
     0b11111,
-    0b11111,
-    0b11111,
-    0b01110,
-    0b00000
+    0b11110,
+    0b11111
 };
 
 static const uint8_t char_snow[8] = {

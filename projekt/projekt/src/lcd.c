@@ -178,3 +178,13 @@ void lcd_shift_display(uint8_t right)
     uint8_t cmd = 0x18 | (right ? (1 << 2) : 0);
     send_cmd(cmd);
 }
+
+void lcd_create_char(uint8_t index, const uint8_t *bitmap)
+{
+    /* Set CGRAM address: 0x40 | (index << 3), index musi byt 0-7 */
+    send_cmd(0x40 | ((index & 0x07) << 3));
+    for (uint8_t i = 0; i < 8; i++)
+        send_byte(bitmap[i], 1);
+    /* Vrat adresaci zpet na DDRAM (jinak by dal zapis smeroval do CGRAM) */
+    lcd_set_cursor(0, 0);
+}
