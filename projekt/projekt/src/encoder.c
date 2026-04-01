@@ -8,7 +8,7 @@
  * ----------------------------------------------------------------- */
 #define ENC_A_PIN   PD2     /* INT0 - CLK kanal A */
 #define ENC_B_PIN   PD3     /* INT1 - DT  kanal B */
-#define ENC_SW_PIN  PB2     /* SW tlacitko (aktivni LOW) */
+#define ENC_SW_PIN  PB5     /* SW tlacitko (aktivni LOW) */
 
 /* -----------------------------------------------------------------
  * Timer2 CTC — generuje tick kazdych 10 ms
