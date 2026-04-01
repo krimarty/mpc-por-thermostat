@@ -17,6 +17,34 @@
 #include <stdint.h>
 
 /* -----------------------------------------------------------------
+ * CGRAM indexy vlastnich znaku
+ * ----------------------------------------------------------------- */
+#define CGRAM_FLAME  0
+#define CGRAM_SNOW   1
+
+static const uint8_t char_flame[8] = {
+    0b00100,
+    0b01110,
+    0b01110,
+    0b11111,
+    0b11111,
+    0b11111,
+    0b01110,
+    0b00000
+};
+
+static const uint8_t char_snow[8] = {
+    0b00100,
+    0b10101,
+    0b01110,
+    0b00100,
+    0b01110,
+    0b10101,
+    0b00100,
+    0b00000
+};
+
+/* -----------------------------------------------------------------
  * Stavy
  * ----------------------------------------------------------------- */
 typedef enum {
@@ -101,9 +129,19 @@ static void draw_main(void)
     char ta[7], ts[7], buf[17];
     fmt_t(g_temp, ta, sizeof(ta));
     fmt_t(g_settings.sp, ts, sizeof(ts));
-    char sc = relay_get_heating() ? 'H' : relay_get_cooling() ? 'C' : ' ';
-    snprintf(buf, sizeof(buf), "A:%-5sS:%-5s%c", ta, ts, sc);
-    draw_row(0, buf);
+    /* Format: "21.9/24.0 \xDFC " — \xDF = znak stupne v HD44780 ROM
+     * Posledni znak (plaminek/vlocka/mezera) zapsat zvlast, protoze
+     * CGRAM index 0 = \x00 = null terminator, ktery by snprintf zkratil. */
+    snprintf(buf, sizeof(buf), "%s/%s %cC ", ta, ts, 0xDF);
+    /* Doplnit mezerami na 15 znaku, pak zapsat indikator na pozici 15 */
+    uint8_t len = (uint8_t)strlen(buf);
+    while (len < 15) buf[len++] = ' ';
+    buf[15] = relay_get_heating() ? (char)CGRAM_FLAME
+            : relay_get_cooling() ? (char)CGRAM_SNOW
+            : ' ';
+    buf[16] = '\0';
+    lcd_set_cursor(0, 0);
+    for (uint8_t i = 0; i < 16; i++) lcd_write_char(buf[i]);
 
     uint8_t h, m, s, d, mo, y, day;
     ds1307_get_time(&h, &m, &s);
@@ -373,6 +411,9 @@ static void do_save(int16_t delta, enc_btn_event_t evt)
 
 void menu_init(void)
 {
+    lcd_create_char(CGRAM_FLAME, char_flame);
+    lcd_create_char(CGRAM_SNOW,  char_snow);
+
     state  = MS_MAIN;
     cursor = 0;
     redraw = 1;
