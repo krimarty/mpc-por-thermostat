@@ -8,7 +8,7 @@
  * ----------------------------------------------------------------- */
 #define ENC_A_PIN   PD2     /* INT0 - CLK kanal A */
 #define ENC_B_PIN   PD3     /* INT1 - DT  kanal B */
-#define ENC_SW_PIN  PB5     /* SW tlacitko (aktivni LOW) */
+#define ENC_SW_PIN  PC2     /* SW tlacitko (aktivni LOW) */
 
 /* -----------------------------------------------------------------
  * Timer2 CTC — generuje tick kazdych 10 ms
@@ -34,9 +34,6 @@
 #define BTN_DEBOUNCE_TICKS  5U
 #define BTN_LONG_TICKS      100U
 
-/* Debounce cas enkoderu: 0.25 ms * 2 tiky/us = 500 tiku getTime() */
-#define ENC_DEBOUNCE_US     500UL
-
 /* Forward declaration — definice je az za ISR */
 static void encoder_tick(void);
 
@@ -46,36 +43,28 @@ static void encoder_tick(void);
  * ----------------------------------------------------------------- */
 static const int8_t enc_table[16] = {
 /*       00   01   10   11  */
-/*00*/    0,  -1,  +1,   0,
-/*01*/   +1,   0,   0,  -1,
-/*10*/   -1,   0,   0,  +1,
-/*11*/    0,  +1,  -1,   0
+/*00*/    0,  +1,  -1,   0,
+/*01*/   -1,   0,   0,  +1,
+/*10*/   +1,   0,   0,  -1,
+/*11*/    0,  -1,  +1,   0
 };
 
 /* -----------------------------------------------------------------
  * Stavove promenne
  * ----------------------------------------------------------------- */
-static volatile int16_t enc_count    = 0;   /* syrovy pocet pulzu */
-static          uint8_t enc_state    = 0;   /* posledni stav A/B */
-static volatile uint32_t enc_last_us = 0;   /* cas posledniho pulzu */
+static volatile int16_t enc_count = 0;   /* syrovy pocet pulzu */
+static          uint8_t enc_state = 0;   /* posledni stav A/B */
 
-static          uint8_t         btn_hold  = 0;              /* pocitadlo ticku drzeni */
+static          uint8_t         btn_hold  = 0;              /* pocitadlo ticku drzeni (Timer2) */
 static          uint8_t         btn_fired = 0;              /* 1 = long uz byl vydan */
 static volatile enc_btn_event_t btn_event = ENC_BTN_NONE;   /* cekajici udalost */
 
 /* -----------------------------------------------------------------
- * ISR pro enkoder — INT0 (kanal A) a INT1 (kanal B)
- * Debounce: ignoruj pulzy kratsi nez ENC_DEBOUNCE_US
+ * ISR pro enkoder — INT0 (kanal A) a INT1 (kanal B), jakakoli hrana
+ * Quadraturni tabulka filtruje zakmity sama — zadny casovy debounce.
  * ----------------------------------------------------------------- */
 static void enc_process(void)
 {
-    /* getTime() vraci tiky po 0.5 us, takze 500 tiku = 250 us */
-    extern uint32_t getTime(void);
-    uint32_t now = getTime();
-    if ((now - enc_last_us) < ENC_DEBOUNCE_US)
-        return;
-    enc_last_us = now;
-
     uint8_t a   = (PIND >> ENC_A_PIN) & 1;
     uint8_t b   = (PIND >> ENC_B_PIN) & 1;
     uint8_t cur = (a << 1) | b;
@@ -97,8 +86,8 @@ void encoder_init(void)
     DDRD  &= ~((1 << ENC_A_PIN) | (1 << ENC_B_PIN));
     PORTD |=   (1 << ENC_A_PIN) | (1 << ENC_B_PIN);
 
-    DDRB  &= ~(1 << ENC_SW_PIN);
-    PORTB |=  (1 << ENC_SW_PIN);
+    DDRC  &= ~(1 << ENC_SW_PIN);
+    PORTC |=  (1 << ENC_SW_PIN);
 
     /* Zapamatuj pocatecni polohu enkoderu */
     enc_state = (((PIND >> ENC_A_PIN) & 1) << 1)
@@ -138,7 +127,7 @@ ISR(TIMER2_COMPA_vect)
  * ----------------------------------------------------------------- */
 static void encoder_tick(void)
 {
-    uint8_t pressed = !((PINB >> ENC_SW_PIN) & 1);  /* aktivni LOW */
+    uint8_t pressed = !((PINC >> ENC_SW_PIN) & 1);  /* aktivni LOW */
 
     if (pressed)
     {
@@ -165,14 +154,14 @@ static void encoder_tick(void)
 
 /* -----------------------------------------------------------------
  * encoder_get_count
- * Vraci pocet detentu (1 detent = 4 kvadraturni pulzy -> >> 2).
+ * Vraci pocet detentu (1 detent = 1 nastupna hrana INT0).
  * ----------------------------------------------------------------- */
 int16_t encoder_get_count(void)
 {
     cli();
     int16_t val = enc_count;
     sei();
-    return val >> 2;
+    return val / 4;
 }
 
 /* -----------------------------------------------------------------
