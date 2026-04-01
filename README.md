@@ -1,0 +1,3 @@
+# projekt
+
+Automaticky termostat
