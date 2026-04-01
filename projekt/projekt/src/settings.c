@@ -16,8 +16,8 @@
  * 0x0005  1 B  kalibrace: ulozena jako (cal_tenths + 50), uint8, rozsah 0-100
  * 0x0006  1 B  scheduler enabled (0/1)
  * 0x0007  1 B  rezerva
- * 0x0008 20 B  pracovni dny: 4x slot (5 B kazdy)
- * 0x001C 20 B  vikend:       4x slot (5 B kazdy)
+ * 0x0008 20 B  pracovni dny: 4x slot (5 B kazdy)  [page 0, 0x0008-0x001B]
+ * 0x0020 20 B  vikend:       4x slot (5 B kazdy)  [page 1, 0x0020-0x0033]
  *
  * Slot (5 B):
  *   [0] enabled (0/1)
@@ -32,7 +32,7 @@
 #define EEPROM_ADDR_CAL      0x0005
 #define EEPROM_ADDR_SCHED_EN 0x0006
 #define EEPROM_ADDR_WD       0x0008
-#define EEPROM_ADDR_WE       0x001C
+#define EEPROM_ADDR_WE       0x0020
 
 #define MAGIC_0  0xBE
 #define MAGIC_1  0xEF
