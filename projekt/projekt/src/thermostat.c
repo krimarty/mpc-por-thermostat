@@ -38,15 +38,28 @@ static uint8_t sched_tick_cnt = 0;
 
 /* -----------------------------------------------------------------
  * Pomocna: zmer teplotu, vrat x10 (po kalibraci)
+ * Klouzavy prumer z posledních ADC_FILTER_SIZE vzorku ADC.
  * ----------------------------------------------------------------- */
+#define ADC_FILTER_SIZE  20U
+
 static int16_t read_temp(void)
 {
-    uint16_t adc  = adc_read(TEMP_ADC_CH);
+    static uint16_t adc_buf[ADC_FILTER_SIZE];
+    static uint8_t  adc_idx   = 0;
+    static uint8_t  adc_count = 0;
+
+    adc_buf[adc_idx] = adc_read(TEMP_ADC_CH);
+    adc_idx = (uint8_t)((adc_idx + 1u) % ADC_FILTER_SIZE);
+    if (adc_count < ADC_FILTER_SIZE) adc_count++;
+
+    uint32_t sum = 0;
+    for (uint8_t i = 0; i < adc_count; i++) sum += adc_buf[i];
+    uint16_t adc = (uint16_t)(sum / adc_count);
+
     float    vadc = adc * 5.0f / 1024.0f;
     float    rth  = TEMP_R1 * vadc / (5.0f - vadc) - TEMP_R2;
     float    tk   = 1.0f / (logf(rth / TEMP_R0) / TEMP_BETA + 1.0f / TEMP_T0);
     float    tc   = tk - 273.15f;
-    /* Pricti kalibraci a preved na x10 */
     return (int16_t)(tc * 10.0f) + (int16_t)g_settings.cal;
 }
 
