@@ -146,6 +146,7 @@ static void draw_main(void)
     uint8_t h, m, s, d, mo, y, day;
     ds1307_get_time(&h, &m, &s);
     ds1307_get_date(&d, &mo, &y, &day);
+    if (day < 1u || day > 7u) day = 1u;   /* ochrana proti OOB pri I2C glitchi */
     snprintf(buf, sizeof(buf), "%s %02u.%02u. %02u:%02u",
              DS1307_DAY_STR[day], d, mo, h, m);
     draw_row(1, buf);
@@ -170,7 +171,7 @@ static void draw_edit(const char *title, const char *val)
 static void draw_edit_hyst(void)
 {
     char val[10];
-    snprintf(val, sizeof(val), "%u.%u C", g_settings.hyst / 10, g_settings.hyst % 10);
+    snprintf(val, sizeof(val), "%u.%u %cC", g_settings.hyst / 10, g_settings.hyst % 10, 0xDF);
     draw_edit("HYSTEREZE", val);
 }
 
@@ -179,7 +180,7 @@ static void draw_edit_cal(void)
     char val[10];
     fmt_t(g_settings.cal, val, sizeof(val));
     uint8_t l = (uint8_t)strlen(val);
-    snprintf(val + l, (uint8_t)(sizeof(val) - l), " C");
+    snprintf(val + l, (uint8_t)(sizeof(val) - l), " %cC", 0xDF);
     draw_edit("KALIBRACE", val);
 }
 
@@ -397,7 +398,7 @@ static void do_edit_slot(int16_t delta, enc_btn_event_t evt)
 
 static void do_save(int16_t delta, enc_btn_event_t evt)
 {
-    if (delta) { save_yes = (delta > 0) ? 1u : 0u; redraw = 1; }
+    if (delta) { save_yes = (delta < 0) ? 1u : 0u; redraw = 1; }
     if (evt == ENC_BTN_SHORT)
     {
         if (save_yes) settings_save();
