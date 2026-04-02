@@ -28,10 +28,10 @@
 #include "include/uart_cmd.h"
 
 /* getTime() vraci tiky po 0.5 us
- * 1 s  = 2 000 000 tiku
- * 5 s  = 10 000 000 tiku */
-#define TICKS_1S   2000000UL
-#define TICKS_5S   10000000UL
+ * 250 ms =  500 000 tiku  (refresh teploty + displeje, 4 Hz)
+ * 1 s    = 2000 000 tiku  (regulace + scheduler) */
+#define TICKS_250MS  500000UL
+#define TICKS_1S    2000000UL
 
 int main(void)
 {
@@ -58,26 +58,26 @@ int main(void)
     /* ----------------------------------------------------------
      * Hlavni smycka
      * ---------------------------------------------------------- */
-    uint32_t last_1s = getTime();
-    uint32_t last_5s = getTime();
+    uint32_t last_250ms = getTime();
+    uint32_t last_1s    = getTime();
 
     while (1)
     {
         uint32_t now = getTime();
 
-        /* Aktualizace displeje (cas) kazdou 1 s */
-        if ((now - last_1s) >= TICKS_1S)
+        /* Cteni teploty + refresh displeje (4 Hz) */
+        if ((now - last_250ms) >= TICKS_250MS)
         {
-            last_1s = now;
+            last_250ms = now;
+            thermostat_sample_temp();
             menu_request_redraw();
         }
 
-        /* Regulace kazdych 5 s */
-        if ((now - last_5s) >= TICKS_5S)
+        /* Regulace + scheduler kazdou 1 s */
+        if ((now - last_1s) >= TICKS_1S)
         {
-            last_5s = now;
+            last_1s = now;
             thermostat_tick();
-            menu_request_redraw();
         }
 
         menu_tick();

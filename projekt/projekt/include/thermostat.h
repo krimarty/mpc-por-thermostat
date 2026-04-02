@@ -42,6 +42,10 @@ void thermostat_init(void);
  *  - kazdych 60 s zkontroluje scheduler */
 void thermostat_tick(void);
 
+/* Jen precte ADC a aktualizuje g_temp (bez regulace).
+ * Volat kazdych 250 ms pro plynule zobrazeni teploty na displeji. */
+void thermostat_sample_temp(void);
+
 /* Rucni zmena SP z menu nebo UART.
  * Nastavi g_settings.sp, zapne manual_override. */
 void thermostat_set_manual_sp(int16_t sp_tenths);

@@ -26,7 +26,7 @@
 /* -----------------------------------------------------------------
  * Intervaly (v poctu volani thermostat_tick, 1 tick = 5 s)
  * ----------------------------------------------------------------- */
-#define SCHED_CHECK_TICKS  12U    /* 12 * 5 s = 60 s */
+#define SCHED_CHECK_TICKS  60U    /* 60 * 1 s = 60 s */
 
 /* -----------------------------------------------------------------
  * Globalni promenne
@@ -173,6 +173,14 @@ void thermostat_tick(void)
         sched_tick_cnt = 0;
         scheduler_check();
     }
+}
+
+/* -----------------------------------------------------------------
+ * thermostat_sample_temp — jen ADC, bez regulace
+ * ----------------------------------------------------------------- */
+void thermostat_sample_temp(void)
+{
+    g_temp = read_temp();
 }
 
 /* -----------------------------------------------------------------
