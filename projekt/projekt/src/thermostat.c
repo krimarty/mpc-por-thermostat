@@ -24,17 +24,12 @@
 #define TEMP_T0       298.15f
 
 /* -----------------------------------------------------------------
- * Intervaly (v poctu volani thermostat_tick, 1 tick = 5 s)
- * ----------------------------------------------------------------- */
-#define SCHED_CHECK_TICKS  60U    /* 60 * 1 s = 60 s */
-
-/* -----------------------------------------------------------------
  * Globalni promenne
  * ----------------------------------------------------------------- */
 volatile int16_t g_temp           = 0;
 volatile uint8_t g_manual_override = 0;
 
-static uint8_t sched_tick_cnt = 0;
+static uint8_t last_min = 0xFF;   /* 0xFF = neplatna hodnota, vynutí prvni kontrolu */
 
 /* -----------------------------------------------------------------
  * Pomocna: zmer teplotu, vrat x10 (po kalibraci)
@@ -169,7 +164,7 @@ void thermostat_init(void)
 {
     g_temp            = read_temp();
     g_manual_override = 0;
-    sched_tick_cnt    = 0;
+    last_min          = 0xFF;
 }
 
 /* -----------------------------------------------------------------
@@ -180,10 +175,11 @@ void thermostat_tick(void)
     g_temp = read_temp();
     regulate();
 
-    sched_tick_cnt++;
-    if (sched_tick_cnt >= SCHED_CHECK_TICKS)
+    uint8_t h, m, s;
+    ds1307_get_time(&h, &m, &s);
+    if (m != last_min)
     {
-        sched_tick_cnt = 0;
+        last_min = m;
         scheduler_check();
     }
 }
