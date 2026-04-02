@@ -318,6 +318,7 @@ static void do_datetime(int16_t delta, enc_btn_event_t evt)
         dt_edit.day = ds1307_day_of_week(
             (uint16_t)(2000u + dt_edit.year), dt_edit.month, dt_edit.date);
         ds1307_set_datetime(&dt_edit);
+        settings_save_rtc(&dt_edit);
         set_state(MS_ROOT);
     }
 }

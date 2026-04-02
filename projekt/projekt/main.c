@@ -51,6 +51,7 @@ int main(void)
     ds1307_init();
 
     settings_load();
+    settings_load_rtc();   /* obnov cas DS1307 z EEPROM po vypnuti */
     thermostat_init();
     menu_init();
 

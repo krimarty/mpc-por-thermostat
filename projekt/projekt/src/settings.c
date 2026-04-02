@@ -6,6 +6,7 @@
 
 #include "../include/settings.h"
 #include "../include/at24c32.h"
+#include "../include/ds1307.h"
 
 /* -----------------------------------------------------------------
  * EEPROM mapa
@@ -33,6 +34,9 @@
 #define EEPROM_ADDR_SCHED_EN 0x0006
 #define EEPROM_ADDR_WD       0x0008
 #define EEPROM_ADDR_WE       0x0020
+/* Cas/datum: rok(1) mes(1) den(1) hod(1) min(1) den_tydne(1) = 6 B */
+#define EEPROM_ADDR_RTC      0x0034
+#define RTC_MAGIC            0xA5    /* overeni platnosti ulozeneho casu */
 
 #define MAGIC_0  0xBE
 #define MAGIC_1  0xEF
@@ -187,4 +191,49 @@ void settings_save(void)
         slot_to_bytes(&g_settings.we[i], slot_buf);
         at24c32_write((uint16_t)(EEPROM_ADDR_WE + i * 5u), slot_buf, 5);
     }
+}
+
+/* -----------------------------------------------------------------
+ * settings_save_rtc — ulozi cas do EEPROM
+ * Format (7 B od 0x0034):
+ *   [0] magic 0xA5
+ *   [1] year  (0-99)
+ *   [2] month (1-12)
+ *   [3] date  (1-31)
+ *   [4] hour  (0-23)
+ *   [5] min   (0-59)
+ *   [6] day   (1-7, DS1307 format)
+ * ----------------------------------------------------------------- */
+void settings_save_rtc(const ds1307_time_t *t)
+{
+    uint8_t buf[7];
+    buf[0] = RTC_MAGIC;
+    buf[1] = t->year;
+    buf[2] = t->month;
+    buf[3] = t->date;
+    buf[4] = t->hour;
+    buf[5] = t->min;
+    buf[6] = t->day;
+    at24c32_write(EEPROM_ADDR_RTC, buf, 7);
+}
+
+/* -----------------------------------------------------------------
+ * settings_load_rtc — nacte cas z EEPROM a zapise do DS1307
+ * ----------------------------------------------------------------- */
+void settings_load_rtc(void)
+{
+    uint8_t buf[7];
+    at24c32_read(EEPROM_ADDR_RTC, buf, 7);
+
+    if (buf[0] != RTC_MAGIC) return;   /* zadna platna data */
+
+    ds1307_time_t t;
+    t.year  = (buf[1] <= 99u) ? buf[1] : 0u;
+    t.month = (buf[2] >= 1u && buf[2] <= 12u) ? buf[2] : 1u;
+    t.date  = (buf[3] >= 1u && buf[3] <= 31u) ? buf[3] : 1u;
+    t.hour  = (buf[4] <= 23u) ? buf[4] : 0u;
+    t.min   = (buf[5] <= 59u) ? buf[5] : 0u;
+    t.sec   = 0u;
+    t.day   = (buf[6] >= 1u && buf[6] <= 7u) ? buf[6] : 1u;
+    ds1307_set_datetime(&t);
 }

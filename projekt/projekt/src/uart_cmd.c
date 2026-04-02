@@ -180,6 +180,7 @@ static void cmd_set(const char *p)
         t.hour = h; t.min = m; t.sec = 0;
         t.day  = ds1307_day_of_week((uint16_t)(2000u + t.year), t.month, t.date);
         ds1307_set_datetime(&t);
+        settings_save_rtc(&t);
         printf("OK\n");
     }
 
@@ -196,6 +197,7 @@ static void cmd_set(const char *p)
         t.date = d; t.month = mo; t.year = y;
         t.day  = ds1307_day_of_week((uint16_t)(2000u + y), mo, d);
         ds1307_set_datetime(&t);
+        settings_save_rtc(&t);
         printf("OK\n");
     }
 

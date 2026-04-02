@@ -23,6 +23,7 @@
 #define SETTINGS_H_
 
 #include <stdint.h>
+#include "ds1307.h"
 
 /* -----------------------------------------------------------------
  * Jeden casovy slot scheduleru
@@ -59,5 +60,18 @@ void settings_load(void);
 
 /* Uloz aktualni g_settings do EEPROM */
 void settings_save(void);
+
+/* -----------------------------------------------------------------
+ * Uloz cas a datum do EEPROM (adresa 0x0034).
+ * Volat vzdy po nastaveni casu pres menu nebo UART.
+ * ----------------------------------------------------------------- */
+void settings_save_rtc(const ds1307_time_t *t);
+
+/* -----------------------------------------------------------------
+ * Nacti ulozeny cas z EEPROM a zapis do DS1307.
+ * Volat pri startu po ds1307_init().
+ * Pokud EEPROM neobsahuje platna data, nic nezapise.
+ * ----------------------------------------------------------------- */
+void settings_load_rtc(void);
 
 #endif /* SETTINGS_H_ */
