@@ -19,8 +19,8 @@
 /* -----------------------------------------------------------------
  * CGRAM indexy vlastnich znaku
  * ----------------------------------------------------------------- */
-#define CGRAM_FLAME  0
-#define CGRAM_SNOW   1
+#define CGRAM_FLAME  1
+#define CGRAM_SNOW   2
 
 static const uint8_t char_flame[8] = {
     0b00110,
@@ -141,7 +141,7 @@ static void draw_main(void)
             : ' ';
     buf[16] = '\0';
     lcd_set_cursor(0, 0);
-    for (uint8_t i = 0; i < 16; i++) lcd_write_char(buf[i]);
+    lcd_write_string(buf);
 
     uint8_t h, m, s, d, mo, y, day;
     ds1307_get_time(&h, &m, &s);
@@ -263,7 +263,7 @@ static void do_main(int16_t delta, enc_btn_event_t evt)
 {
     if (delta)
     {
-        thermostat_set_manual_sp(g_settings.sp + delta * 5);
+        thermostat_set_manual_sp(g_settings.sp + delta);
         redraw = 1;
     }
     if (evt == ENC_BTN_SHORT) set_state(MS_ROOT);
@@ -389,7 +389,7 @@ static void do_edit_slot(int16_t delta, enc_btn_event_t evt)
             case 0: sl->enabled = (delta > 0) ? 1u : 0u; break;
             case 1: sl->hour = (uint8_t)clamp16((int16_t)sl->hour + delta, 0, 23); break;
             case 2: sl->min  = (uint8_t)clamp16((int16_t)sl->min  + delta, 0, 59); break;
-            case 3: sl->sp   = clamp16(sl->sp + delta * 5, THERMOSTAT_SP_MIN, THERMOSTAT_SP_MAX); break;
+            case 3: sl->sp   = clamp16(sl->sp + delta, THERMOSTAT_SP_MIN, THERMOSTAT_SP_MAX); break;
         }
         redraw = 1;
     }
