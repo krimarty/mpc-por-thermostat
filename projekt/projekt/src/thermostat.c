@@ -26,10 +26,10 @@
 /* -----------------------------------------------------------------
  * Globalni promenne
  * ----------------------------------------------------------------- */
-volatile int16_t g_temp           = 0;
-volatile uint8_t g_manual_override = 0;
+volatile int16_t g_temp = 0;
 
-static uint8_t last_min = 0xFF;   /* 0xFF = neplatna hodnota, vynutí prvni kontrolu */
+static uint8_t  last_min           = 0xFF;    /* 0xFF = neplatna hodnota, vynutí prvni kontrolu */
+static uint16_t last_sched_slot_min = 0xFFFF; /* cas posledniho aplikovaneho slotu */
 
 /* -----------------------------------------------------------------
  * Pomocna: zmer teplotu, vrat x10 (po kalibraci)
@@ -138,23 +138,22 @@ static void scheduler_check(void)
     }
 
     if (best_idx < 0)
+    {
+        last_sched_slot_min = 0xFFFF;
         return;    /* zadny slot jeste dnes neprobehl */
+    }
 
     int16_t slot_sp = slots[best_idx].sp;
 
-    /* Pokud SP scheduleru nesedi s aktualnim g_settings.sp
-     * a uzivatel ho rucne nezmenil, aplikuj slot */
-    if (!g_manual_override && g_settings.sp != slot_sp)
+    if (best_slot_min != last_sched_slot_min)
     {
+        /* Prechod na novy slot — vzdy prepis SP a vynuluj override */
+        last_sched_slot_min = best_slot_min;
         g_settings.sp = slot_sp;
+        return;
     }
 
-    /* Pokud SP odpovidalo tomu co chtel scheduler,
-     * vynuluj override — uzivatel uz "dohral" */
-    if (g_settings.sp == slot_sp)
-    {
-        g_manual_override = 0;
-    }
+    /* Stale stejny slot jako minule — nic nemen */
 }
 
 /* -----------------------------------------------------------------
@@ -162,9 +161,8 @@ static void scheduler_check(void)
  * ----------------------------------------------------------------- */
 void thermostat_init(void)
 {
-    g_temp            = read_temp();
-    g_manual_override = 0;
-    last_min          = 0xFF;
+    g_temp   = read_temp();
+    last_min = 0xFF;
 }
 
 /* -----------------------------------------------------------------
@@ -200,6 +198,5 @@ void thermostat_set_manual_sp(int16_t sp_tenths)
     if (sp_tenths < THERMOSTAT_SP_MIN) sp_tenths = THERMOSTAT_SP_MIN;
     if (sp_tenths > THERMOSTAT_SP_MAX) sp_tenths = THERMOSTAT_SP_MAX;
 
-    g_settings.sp     = sp_tenths;
-    g_manual_override = 1;
+    g_settings.sp = sp_tenths;
 }

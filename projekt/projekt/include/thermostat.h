@@ -7,8 +7,7 @@
  *   Regulacni logika termostatu.
  *   - Hysterezni on/off regulator (topeni / chlazeni)
  *   - Scheduler: prepina SP dle casovych slotu (60s kontrola)
- *   - Manual override: rucni zmena SP potlaci scheduler
- *     dokud neprijde dalsi aktivni slot
+ *     Pri prechodu na novy slot vzdy prepise SP.
  *
  * Pouziti:
  *   thermostat_init() pri startu (po settings_load, relay_init).
@@ -46,14 +45,10 @@ void thermostat_tick(void);
  * Volat kazdych 250 ms pro plynule zobrazeni teploty na displeji. */
 void thermostat_sample_temp(void);
 
-/* Rucni zmena SP z menu nebo UART.
- * Nastavi g_settings.sp, zapne manual_override. */
+/* Rucni zmena SP z menu nebo UART. Nastavi g_settings.sp. */
 void thermostat_set_manual_sp(int16_t sp_tenths);
 
 /* Aktualni namerena teplota x10 (po kalibraci) */
 extern volatile int16_t g_temp;
-
-/* 1 = uzivatel zmenil SP rucne, scheduler ho neprepsal */
-extern volatile uint8_t g_manual_override;
 
 #endif /* THERMOSTAT_H_ */
