@@ -1,5 +1,5 @@
 /* =============================================================
- * Project:   MPC-POR projekt — Automaticky termostat
+ * Project:   MPC-POR projekt
  * File:      main.c
  * Author:    Martin Kriz
  * -------------------------------------------------------------
